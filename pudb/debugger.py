@@ -227,12 +227,7 @@ class Debugger(bdb.Bdb):
 
         return stack, index
 
-    def interaction(self, frame, exc_tuple=None, show_exc_dialog=True):
-        if exc_tuple is None:
-            tb = None
-        else:
-            tb = exc_tuple[2]
-
+    def interaction(self, frame, tb=None, show_exc_dialog=True):
         if frame is None and tb is not None:
             frame = tb.tb_frame
 
@@ -256,7 +251,7 @@ class Debugger(bdb.Bdb):
 
         self.set_frame_index(index)
 
-        self.ui.call_with_ui(self.ui.interaction, exc_tuple,
+        self.ui.call_with_ui(self.ui.interaction, tb,
                 show_exc_dialog=show_exc_dialog)
 
     def get_stack_situation_id(self):
@@ -310,7 +305,7 @@ class Debugger(bdb.Bdb):
         frame.f_locals['__exc_tuple__'] = exc_tuple
 
         if not self._wait_for_mainpyfile:
-            self.interaction(frame, exc_tuple)
+            self.interaction(frame, exc_tuple[2])
 
     def _runscript(self, filename):
         # Start with fresh empty copy of globals and locals and tell the script
@@ -1465,7 +1460,8 @@ class DebuggerUI(FrameVarInfoKeeper):
 
     # {{{ debugger-facing interface
 
-    def interaction(self, exc_tuple, show_exc_dialog=True):
+    def interaction(self, tb, show_exc_dialog=True):
+        exc_tuple = (None, None, tb)
         self.current_exc_tuple = exc_tuple
 
         from pudb import VERSION

@@ -56,7 +56,7 @@ def runscript(mainpyfile, args=None, pre_run="", steal_output=False):
             status_msg = "The debuggee exited normally with status code %s.\n\n" % se.code
         except:
             dbg.post_mortem = True
-            dbg.interaction(None, sys.exc_info())
+            dbg.interaction(None, sys.exc_info()[2])
 
         while True:
             import urwid
@@ -90,7 +90,7 @@ def runscript(mainpyfile, args=None, pre_run="", steal_output=False):
 
             if result == "examine":
                 dbg.post_mortem = True
-                dbg.interaction(None, sys.exc_info(), show_exc_dialog=False)
+                dbg.interaction(None, sys.exc_info()[2], show_exc_dialog=False)
 
             if result == "restart":
                 break
@@ -146,18 +146,17 @@ def set_interrupt_handler(interrupt_signal=DEFAULT_SIGNAL):
     import signal
     signal.signal(interrupt_signal, _interrupt_handler)
 
-def post_mortem(exc_info=None):
-    if exc_info is None:
+def post_mortem(tb=None):
+    if tb is None:
         import sys
-        exc_info = sys.exc_info()
+        tb = sys.exc_info()[2]
 
-    tb = exc_info[2]
     while tb.tb_next is not None:
         tb = tb.tb_next
 
     dbg = _get_debugger()
     dbg.reset()
-    dbg.interaction(tb.tb_frame, exc_info)
+    dbg.interaction(tb.tb_frame, tb)
 
 
 
@@ -171,7 +170,7 @@ def pm():
     except AttributeError:
         ## No exception on record. Do nothing.
         return
-    post_mortem((e_type, e_value, tb))
+    post_mortem(tb)
 
 
 
